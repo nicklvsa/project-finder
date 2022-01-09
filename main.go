@@ -31,7 +31,10 @@ func main() {
 
 	for _, result := range results {
 		fmt.Printf("Project: %s\n", result.FullPath)
-		fmt.Printf("Author: %s\n", result.Info.Author)
-		fmt.Printf("CreatedAt: %s\n\n\n", result.Info.CreatedAt.String())
+		if result.Info != nil {
+			fmt.Printf("Author: %s\n", result.Info.Author)
+			fmt.Printf("CreatedAt: %s\n", result.Info.CreatedAt.String())
+		}
+		fmt.Printf("\n\n")
 	}
 }
