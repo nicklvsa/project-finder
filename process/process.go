@@ -57,25 +57,32 @@ func (p *Processor) Begin() ([]*ProcessorResult, error) {
 			continue
 		}
 
-		if correctedIndex <= p.ChunkSize {
-			if p.chunks[currentChunk] == nil {
-				p.chunks[currentChunk] = &Chunk{
+		if p.chunks[currentChunk] == nil {
+			p.chunks[currentChunk] = new(Chunk)
+		}
+
+		if correctedIndex < p.ChunkSize-1 {
+			p.chunks[currentChunk].Paths = append(p.chunks[currentChunk].Paths, dir.Name())
+			correctedIndex += 1
+		} else {
+			if p.chunks[currentChunk+1] == nil {
+				p.chunks[currentChunk+1] = &Chunk{
 					Paths: []string{dir.Name()},
 				}
-			} else {
-				p.chunks[currentChunk].Paths = append(p.chunks[currentChunk].Paths, dir.Name())
 			}
-		} else {
+
 			currentChunk += 1
 			correctedIndex = 0
 		}
-
-		correctedIndex += 1
 	}
 
+	// totalPaths := 0
 	// for idx, ch := range p.chunks {
-	// 	fmt.Printf("%d - %+v\n", idx, len(ch.Paths))
+	// 	totalPaths += len(ch.Paths)
+	// 	fmt.Printf("%d - %+v\n", idx, ch.Paths)
 	// }
+
+	// fmt.Printf("TOTAL PATHS: %d\n", totalPaths)
 
 	return p.processChunks(), nil
 }
@@ -103,13 +110,15 @@ func (p *Processor) processChunk(chunk *Chunk, waiter *sync.WaitGroup) {
 			}
 
 			if info.IsDir() && info.Name() == ".git" {
+				walkPath = walkPath[:len(walkPath)-5]
+
 				result := ProcessorResult{
-					FullPath: fullPath,
+					FullPath: walkPath,
 					Name:     path,
 				}
 
 				if p.Dig {
-					result.Info = p.dig(fullPath)
+					result.Info = p.dig(walkPath)
 				}
 
 				p.results = append(p.results, &result)
